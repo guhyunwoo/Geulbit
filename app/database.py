@@ -2,8 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
-from .model import Log, Goal
-from .base import Base
+from base import Base
 
 load_dotenv()
 user = os.getenv("DB_USER")

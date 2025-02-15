@@ -1,19 +1,6 @@
 from pydantic import BaseModel, Field
-from datetime import date
-from typing import Optional
-
-# Tag 모델 정의
-class TagBase(BaseModel):
-    tagname: str
-
-class TagCreate(TagBase):
-    pass
-
-class Tag(TagBase):
-    tid: int
-
-    class Config:
-        from_attributes = True
+from datetime import datetime
+from typing import Optional, List
 
 # User 모델 정의
 class UserBase(BaseModel):
@@ -34,8 +21,9 @@ class User(UserBase):
 class PostBase(BaseModel):
     title: str
     content: str
-    time_stamp: date = Field(default_factory=date.today)
+    time_stamp: datetime = Field(default_factory=datetime.now)
     image: Optional[str] = None
+    like: int = 0  # 추가된 필드
 
 class PostCreate(PostBase):
     uid: Optional[int] = None
@@ -44,6 +32,22 @@ class Post(PostBase):
     pid: int
     uid: int
     user: Optional[User] = None
+    tags: List["Tag"] = []
+
+    class Config:
+        from_attributes = True
+
+
+# Tag 모델 정의
+class TagBase(BaseModel):
+    tagname: str = Field(..., max_length=20)
+
+class TagCreate(TagBase):
+    pass
+
+class Tag(TagBase):
+    tid: int
+    posts: List[Post] = []
 
     class Config:
         from_attributes = True
