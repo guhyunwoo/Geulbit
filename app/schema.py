@@ -17,6 +17,10 @@ class User(UserBase):
         from_attributes = True
 
 
+class AIRequest(BaseModel):
+    content: str
+    prompt: str
+
 # Post 모델 정의
 class PostBase(BaseModel):
     title: str
