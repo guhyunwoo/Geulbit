@@ -5,3 +5,4 @@ pymysql
 python-dotenv
 pydantic
 google-generativeai
+cryptography

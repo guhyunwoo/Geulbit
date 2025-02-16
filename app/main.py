@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.params import Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, and_
 from database import SessionLocal
 import schema, database, model
 import os
@@ -34,17 +34,21 @@ def get_db():
 
 # 소설 생성
 @app.post("/novels")
-def generate_novel(novel: schema.PostBase, db: Session = Depends(get_db)):
+def generate_novel(novel: schema.PostCreate, db: Session = Depends(get_db)):
     db_novel = model.Post(**novel.dict())  # Pydantic → SQLAlchemy 변환
     db.add(db_novel)
     db.commit()
     db.refresh(db_novel)
-    print(db_novel)
 
 # 소설 목록 조회
 @app.get("/novels")
 def get_novels(db: Session = Depends(get_db)):
     return db.query(model.Post).order_by(desc(model.Post.pid)).all()
+
+# 찜 목록 정렬
+@app.get("/novels/like")
+def get_novels_like(db: Session = Depends(get_db)):
+    return db.query(model.Post).order_by(desc(model.Post.like)).all()
 
 # 소설 한 편 조회
 @app.get("/novels/{novel_id}")
@@ -58,3 +62,53 @@ def ai(request: schema.AIRequest):
     ai_reply = response.text
     print(ai_reply)
     return ai_reply
+
+# 태그 생성
+@app.post("/tags")
+def create_tag(tag: schema.TagBase, db: Session = Depends(get_db)):
+    db_tag = model.Tag(**tag.dict())
+    db.add(db_tag)
+    db.commit()
+    db.refresh(db_tag)
+
+# 유저 생성
+@app.post("/users")
+def create_user(user: schema.UserCreate, db: Session = Depends(get_db)):
+    db_user = model.User(**user.dict())
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+
+# 유저 로그인
+@app.post("/login")
+def get_user(user:schema.UserCreate, db: Session = Depends(get_db)):
+    return db.query(model.User).filter(and_(model.User.id == user.id, model.User.psword == user.psword)).scalar()
+
+#찜하기
+@app.post("/novels/like")
+def like_novel(req:schema.Like, db: Session = Depends(get_db)):
+    novel = db.query(model.Post).filter_by(pid=req.pid).first()
+
+    like_entry = db.query(model.Like).filter_by(uid=req.uid, pid=req.pid).first()
+
+    if like_entry:
+        db.delete(like_entry)
+        if novel.like > 0:
+            novel.like -= 1
+    else:
+        db.add(model.Like(uid=req.uid, pid=req.pid))
+        novel.like += 1
+
+    db.commit()
+
+
+
+# 찜한 소설 조회
+@app.get("/novels/like/{user_id}")
+def get_user_like(user_id: int, db: Session = Depends(get_db)):
+    return (
+        db.query(model.Post)
+        .join(model.Like, model.Like.pid == model.Post.pid)
+        .filter(model.Like.uid == user_id)
+        .all()
+    )

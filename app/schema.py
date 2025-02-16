@@ -35,14 +35,11 @@ class PostCreate(PostBase):
 class Post(PostBase):
     pid: int
     uid: int
-    user: Optional[User] = None
     tags: List["Tag"] = []
 
     class Config:
         from_attributes = True
 
-
-# Tag 모델 정의
 class TagBase(BaseModel):
     tagname: str = Field(..., max_length=20)
 
@@ -51,7 +48,12 @@ class TagCreate(TagBase):
 
 class Tag(TagBase):
     tid: int
-    posts: List[Post] = []
+    posts: List["Post"] = []  # "Post"를 문자열로 변경
 
     class Config:
         from_attributes = True
+        from_attributes = True
+
+class Like(BaseModel):
+    uid: int
+    pid: int

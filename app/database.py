@@ -9,7 +9,7 @@ user = os.getenv("DB_USER")
 host = os.getenv("DB_HOST")
 password = os.getenv("DB_PASSWORD")
 database = os.getenv("DB_NAME")
-DATABASE_URL = f"mysql+pymysql://{user}:{password}@{host}:3306/{database}?charset=utf8"
+DATABASE_URL = f"mysql+pymysql://{user}:{password}@localhost:3306/{database}?charset=utf8"
 
 engine = create_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
